@@ -31,32 +31,63 @@
     return (1.0 - t) * WHITE + t * SKY_BLUE;
 }
 
-int main() {
-    const auto aspect_ratio = 16.0 / 9.0;
-    const auto image_width = 400;
-    const auto image_height = static_cast<int>(image_width / aspect_ratio);
-    const auto samples_per_pixel = 100;
-    const auto max_depth = 50;
-
-    const auto R = std::cos(M_PI_4);
+[[nodiscard]] auto random_scene() noexcept {
     hittable_list world;
 
-    auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    auto material_left   = make_shared<dielectric>(1.5);
-    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+    const auto ground_material = make_shared<lambertian>(color{0.5, 0.5, 0.5});
+    world.add(make_shared<sphere>(point3{0, -1000, 0}, 1000, ground_material));
 
-    world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.0),   0.5, material_center));
-    world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
-    world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0), -0.45, material_left));
-    world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+    for (auto a = -11; a < 11; ++a) {
+        for (auto b = -11; b < 11; ++b) {
+            const point3 center{a + 0.9 * random_double(), 0.2, b + 0.9 * random_double()};
 
-    const point3 lookfrom{3, 3, 2};
-    const point3 lookat{0, 0, -1};
+            if ((center - point3{4, 0.2, 0}).length() > 0.9) {
+                const auto choose_mat = random_double();
+                shared_ptr<material> sphere_material;
+
+                if (choose_mat < 0.8) {
+                    // Diffuse.
+                    const auto albedo = color::random() * color::random();
+                    sphere_material = make_shared<lambertian>(albedo);
+                } else if (choose_mat < 0.95) {
+                    // Metal
+                    const auto albedo = color::random(0.5, 1);
+                    const auto fuzz = random_double(0, 0.5);
+                    sphere_material = make_shared<metal>(albedo, fuzz);
+                } else {
+                    // Glass
+                    sphere_material = make_shared<dielectric>(1.5);
+                }
+                world.add(make_shared<sphere>(center, 0.2, sphere_material));
+            }
+        }
+    }
+
+    const auto material1 = make_shared<dielectric>(1.5);
+    const auto material2 = make_shared<lambertian>(color{0.4, 0.2, 0.1});
+    const auto material3 = make_shared<metal>(color{0.7, 0.6, 0.5}, 0.0);
+
+    world.add(make_shared<sphere>(point3{0, 1, 0}, 1.0, material1));
+    world.add(make_shared<sphere>(point3{-4, 1, 0}, 1.0, material2));
+    world.add(make_shared<sphere>(point3{4, 1, 0}, 1.0, material3));
+
+    return world;
+}
+
+int main() {
+    const auto aspect_ratio = 3.0 / 2.0;
+    const auto image_width = 1200;
+    const auto image_height = static_cast<int>(image_width / aspect_ratio);
+    const auto samples_per_pixel = 500;
+    const auto max_depth = 50;
+
+    const auto world = random_scene();
+
+    const point3 lookfrom{13, 2, 3};
+    const point3 lookat{0, 0, 0};
     const vec3 vup{0, 1, 0};
-    const auto dist_to_focus = (lookfrom - lookat).length();
-    const auto aperture = 2.0;
+    const auto dist_to_focus = 10.0;
+    const auto aperture = 0.1;
 
     camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
