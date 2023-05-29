@@ -75,11 +75,10 @@ public:
         const auto refraction_ratio = rec.front_face ? (1.0 / ir) : ir;
 
         const auto unit_direction = r_in.direction().unit_vector();
-        const auto cos_theta = std::min(-unit_direction.dot(rec.normal), 1.0);
+        const auto cos_theta = std::min((-unit_direction).dot(rec.normal), 1.0);
         const auto sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
 
         const auto cannot_refract = refraction_ratio * sin_theta > 1.0;
-
         vec3 direction;
         if (cannot_refract || reflectance(cos_theta, refraction_ratio) > random_double())
             direction = reflect(unit_direction, rec.normal);
@@ -91,10 +90,10 @@ public:
     }
 
 private:
-    static double reflectance(double cosine, double ref_idx) {
+    [[nodiscard]] static double reflectance(double cosine, double ref_idx) noexcept {
         // Schlick's approximation.
         const auto r0 = (1 - ref_idx) / (1 + ref_idx);
-        const auto r0_2 = r0 + r0;
+        const auto r0_2 = r0 * r0;
         return r0_2 + (1 - r0_2) * std::pow(1 - cosine, 5);
     }
 };
