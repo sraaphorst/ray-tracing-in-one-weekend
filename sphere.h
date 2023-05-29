@@ -19,15 +19,10 @@ public:
 
     sphere() noexcept: center{point3(0, 0, 0)}, radius{1} {}
 
+    // Allow negative radius for S10.5.
     sphere(point3 center,
            double radius,
-           shared_ptr<material> m): center{center}, radius{radius}, mat_ptr{std::move(m)} {
-        if (radius <= 0) {
-            std::stringstream ss;
-            ss << "Circle cannot exist with non-positive radius: " << radius;
-            throw std::invalid_argument(ss.str());
-        }
-    }
+           shared_ptr<material> m) noexcept: center{center}, radius{radius}, mat_ptr{std::move(m)} {}
 
     [[nodiscard]] bool hit(const ray &r, double t_min, double t_max, hit_record &rec) const noexcept override {
         const auto oc = r.origin() - center;
