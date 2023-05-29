@@ -10,7 +10,9 @@
 #include "sphere.h"
 #include "material.h"
 
+#include <omp.h>
 #include <iostream>
+#include <mutex>
 
 [[nodiscard]] auto ray_color(const ray &r, const hittable &world, int depth) noexcept {
     // If we've exceeded the ray bounce limit, no more light is gathered.
@@ -75,6 +77,8 @@
 }
 
 int main() {
+    std::mutex mtx;
+
     const auto aspect_ratio = 3.0 / 2.0;
     const auto image_width = 1200;
     const auto image_height = static_cast<int>(image_width / aspect_ratio);
@@ -92,8 +96,11 @@ int main() {
     camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+
     for (auto j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+        std::vector<color> line(image_width);
+        #pragma omp parallel for schedule(dynamic) default(none) shared(mtx, std::cout, j, world, cam, image_width, image_height, max_depth, samples_per_pixel, line)
         for (auto i = 0; i < image_width; ++i) {
             color pixel_color{0, 0, 0};
             for (int s = 0; s < samples_per_pixel; ++s) {
@@ -102,8 +109,14 @@ int main() {
                 const auto r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, world, max_depth);
             }
-            write_color(std::cout, pixel_color, samples_per_pixel);
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                line[i] = pixel_color;
+            }
         }
+
+        for (const auto pixel_color: line)
+            write_color(std::cout, pixel_color, samples_per_pixel);
     }
 
     std::cerr << "\nDone.\n";
