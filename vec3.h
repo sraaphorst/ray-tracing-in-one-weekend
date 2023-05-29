@@ -141,8 +141,8 @@ inline auto &operator<<(std::ostream &out, const vec3 &v) {
 }
 
 [[nodiscard]] auto refract(const vec3 &uv, const vec3 &n, double etai_over_etat) {
-    const auto cos_theta = fmin(-uv.dot(n), 1.0);
+    const auto cos_theta = std::fmin(-uv.dot(n), 1.0);
     const auto r_out_perp = etai_over_etat * (uv + cos_theta * n);
-    const auto r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
+    const auto r_out_parallel = -std::sqrt(std::abs(1.0 - r_out_perp.length_squared())) * n;
     return r_out_perp + r_out_parallel;
 }
