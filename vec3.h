@@ -11,6 +11,7 @@
 
 class vec3 final {
 private:
+    const static double epsilon;
     double e[3];
 
 public:
@@ -92,11 +93,19 @@ public:
     [[nodiscard]] inline static auto random(double min, double max) noexcept {
         return vec3{random_double(min, max), random_double(min, max), random_double(min, max)};
     }
+
+    [[nodiscard]] bool near_zero() const noexcept {
+        return (fabs(e[0]) < epsilon) && (fabs(e[1]) < epsilon) && (fabs(e[2]) < epsilon);
+    }
 };
+
+const double vec3::epsilon = 1e-8;
 
 // Type aliases for vec3.
 using point3 = vec3;
 using color = vec3;
+
+const color BLACK{0, 0, 0};
 
 // Utility functions
 inline auto &operator<<(std::ostream &out, const vec3 &v) {
@@ -123,4 +132,8 @@ inline auto &operator<<(std::ostream &out, const vec3 &v) {
 [[nodiscard]] auto random_in_hemisphere(const vec3 &normal) noexcept {
     auto in_unit_sphere = random_in_unit_sphere();
     return in_unit_sphere.dot(normal) > 0.0 ? in_unit_sphere : -in_unit_sphere;
+}
+
+[[nodiscard]] auto reflect(const vec3 &v, const vec3 &n) {
+    return v - 2 * v.dot(n) * n;
 }

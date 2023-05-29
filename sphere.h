@@ -9,19 +9,23 @@
 #include <exception>
 #include <iostream>
 #include <sstream>
+#include <utility>
 
 class sphere final : public hittable {
 public:
     const point3 center;
     const double radius;
+    shared_ptr<material> mat_ptr;
 
     sphere() noexcept: center{point3(0, 0, 0)}, radius{1} {}
 
-    sphere(point3 center, double radius): center{center}, radius{radius} {
-        if (radius < 0) {
+    sphere(point3 center,
+           double radius,
+           shared_ptr<material> m): center{center}, radius{radius}, mat_ptr{std::move(m)} {
+        if (radius <= 0) {
             std::stringstream ss;
             ss << "Circle cannot exist with non-positive radius: " << radius;
-            throw new std::invalid_argument(ss.str());
+            throw std::invalid_argument(ss.str());
         }
     }
 
@@ -48,6 +52,7 @@ public:
         rec.p = r.at(rec.t);
         const auto outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
+        rec.mat_ptr = mat_ptr;
 
         return true;
     }
