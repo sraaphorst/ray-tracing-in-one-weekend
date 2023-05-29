@@ -106,6 +106,8 @@ using point3 = vec3;
 using color = vec3;
 
 const color BLACK{0, 0, 0};
+const color WHITE{1, 1, 1};
+const color SKY_BLUE{0.5, 0.7, 1.0};
 
 // Utility functions
 inline auto &operator<<(std::ostream &out, const vec3 &v) {
@@ -136,4 +138,11 @@ inline auto &operator<<(std::ostream &out, const vec3 &v) {
 
 [[nodiscard]] auto reflect(const vec3 &v, const vec3 &n) {
     return v - 2 * v.dot(n) * n;
+}
+
+[[nodiscard]] auto refract(const vec3 &uv, const vec3 &n, double etai_over_etat) {
+    const auto cos_theta = fmin(-uv.dot(n), 1.0);
+    const auto r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    const auto r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
 }

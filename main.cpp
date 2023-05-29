@@ -28,7 +28,7 @@
 
     const auto unit_direction = r.direction().unit_vector();
     const auto t = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0 - t) * color{1.0, 1.0, 1.0} + t * color{0.5, 0.7, 1.0};
+    return (1.0 - t) * WHITE + t * SKY_BLUE;
 }
 
 int main() {
@@ -41,8 +41,10 @@ int main() {
     hittable_list world;
 
     const auto material_ground = make_shared<lambertian>(color{0.8, 0.8, 0.0});
-    const auto material_center = make_shared<lambertian>(color{0.7, 0.3, 0.3});
-    const auto material_left = make_shared<metal>(color{0.8, 0.8, 0.8}, 0.3);
+//    const auto material_center = make_shared<lambertian>(color{0.7, 0.3, 0.3});
+//    const auto material_left = make_shared<metal>(color{0.8, 0.8, 0.8}, 0.3);
+    const auto material_center = make_shared<dielectric>(1.5);
+    const auto material_left = make_shared<dielectric>(1.5);
     const auto material_right = make_shared<metal>(color{0.8, 0.6, 0.2}, 1.0);
 
     world.add(make_shared<sphere>(point3{0, -100.5, -1}, 100.0, material_ground));

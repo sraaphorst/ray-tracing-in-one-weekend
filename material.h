@@ -58,3 +58,26 @@ public:
         return scattered.direction().dot(rec.normal) > 0;
     }
 };
+
+class dielectric : public material {
+public:
+    // Index of refraction.
+    const double ir;
+
+    explicit dielectric(double index_of_refraction): ir{index_of_refraction} {}
+
+    [[nodiscard]] bool scatter(
+            const ray &r_in,
+            const hit_record &rec,
+            color &attenuation,
+            ray &scattered) const noexcept override {
+        attenuation = WHITE;
+        const auto refraction_ratio = rec.front_face ? (1.0 / ir) : ir;
+
+        const auto unit_direction = r_in.direction().unit_vector();
+        const auto refracted = refract(unit_direction, rec.normal, refraction_ratio);
+
+        scattered = ray{rec.p, refracted};
+        return true;
+    }
+};
