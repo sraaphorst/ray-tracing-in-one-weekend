@@ -19,9 +19,9 @@ public:
 
 class lambertian : public material {
 public:
-    color albedo;
+    const color albedo;
 
-    lambertian(const color &a): albedo{a} {}
+    explicit lambertian(const color &a): albedo{a} {}
 
     [[nodiscard]] bool scatter(
             const ray &r_in,
@@ -42,9 +42,10 @@ public:
 
 class metal : public material {
 public:
-    color albedo;
+    const color albedo;
+    const double fuzz;
 
-    metal(const color &a): albedo{a} {}
+    metal(const color &a, double f): albedo{a}, fuzz{f} {}
 
     [[nodiscard]] bool scatter(
             const ray &r_in,
@@ -52,7 +53,7 @@ public:
             color &attenuation,
             ray &scattered) const noexcept override {
         const auto reflected = reflect(r_in.direction().unit_vector(), rec.normal);
-        scattered = ray{rec.p, reflected};
+        scattered = ray{rec.p, reflected + fuzz * random_in_unit_sphere()};
         attenuation = albedo;
         return scattered.direction().dot(rec.normal) > 0;
     }

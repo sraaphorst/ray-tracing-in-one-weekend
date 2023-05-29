@@ -42,8 +42,8 @@ int main() {
 
     const auto material_ground = make_shared<lambertian>(color{0.8, 0.8, 0.0});
     const auto material_center = make_shared<lambertian>(color{0.7, 0.3, 0.3});
-    const auto material_left = make_shared<metal>(color{0.8, 0.8, 0.8});
-    const auto material_right = make_shared<metal>(color{0.8, 0.6, 0.2});
+    const auto material_left = make_shared<metal>(color{0.8, 0.8, 0.8}, 0.3);
+    const auto material_right = make_shared<metal>(color{0.8, 0.6, 0.2}, 1.0);
 
     world.add(make_shared<sphere>(point3{0, -100.5, -1}, 100.0, material_ground));
     world.add(make_shared<sphere>(point3{0.0, 0.0, -1.0}, 0.5, material_center));
