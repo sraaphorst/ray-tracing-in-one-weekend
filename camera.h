@@ -6,6 +6,8 @@
 #pragma once
 
 #include "rtweekend.h"
+#include "ray.h"
+#include "vec3.h"
 
 class camera final {
 public:

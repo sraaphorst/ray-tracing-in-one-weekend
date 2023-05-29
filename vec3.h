@@ -7,6 +7,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "rtweekend.h"
+
 class vec3 final {
 private:
     double e[3];
@@ -82,6 +84,14 @@ public:
     [[nodiscard]] inline auto unit_vector() const {
         return *this / length();
     }
+
+    [[nodiscard]] inline static auto random() noexcept {
+        return vec3{random_double(), random_double(), random_double()};
+    }
+
+    [[nodiscard]] inline static auto random(double min, double max) noexcept {
+        return vec3{random_double(min, max), random_double(min, max), random_double(min, max)};
+    }
 };
 
 // Type aliases for vec3.
@@ -95,4 +105,13 @@ inline auto &operator<<(std::ostream &out, const vec3 &v) {
 
 [[nodiscard]] inline auto operator*(const double t, const vec3 &v) {
     return v * t;
+}
+
+[[nodiscard]] auto random_in_unit_sphere() noexcept {
+    while (true) {
+        auto p = vec3::random(-1, 1);
+        if (p.length_squared() >= 1)
+            continue;
+        return p;
+    }
 }

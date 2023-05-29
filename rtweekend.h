@@ -5,7 +5,6 @@
 
 #pragma once
 
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -15,9 +14,6 @@ using std::shared_ptr;
 using std::make_shared;
 using std::sqrt;
 
-#include "ray.h"
-#include "vec3.h"
-
 const auto infinity = std::numeric_limits<double>::infinity();
 const auto pi = M_PI;
 
@@ -26,7 +22,7 @@ const auto pi = M_PI;
 }
 
 [[nodiscard]] inline double clamp(double x, double min, double max) {
-    return std::max(std::min(x, max), min);
+    return std::min(std::max(x, min), max);
 }
 
 namespace global_rng {
