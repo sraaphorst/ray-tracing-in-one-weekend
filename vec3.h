@@ -115,3 +115,12 @@ inline auto &operator<<(std::ostream &out, const vec3 &v) {
         return p;
     }
 }
+
+[[nodiscard]] auto random_unit_vector() noexcept {
+    return random_in_unit_sphere().unit_vector();
+}
+
+[[nodiscard]] auto random_in_hemisphere(const vec3 &normal) noexcept {
+    auto in_unit_sphere = random_in_unit_sphere();
+    return in_unit_sphere.dot(normal) > 0.0 ? in_unit_sphere : -in_unit_sphere;
+}

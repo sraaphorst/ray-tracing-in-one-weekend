@@ -18,7 +18,7 @@
 
     hit_record rec;
     if (world.hit(r, 1e-3, infinity, rec)) {
-        const auto target = rec.p + rec.normal + random_in_unit_sphere();
+        const auto target = rec.p + random_in_hemisphere(rec.normal);
         return 0.5 * ray_color(ray{rec.p, target - rec.p}, world, depth - 1);
     }
 
