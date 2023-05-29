@@ -146,3 +146,12 @@ inline auto &operator<<(std::ostream &out, const vec3 &v) {
     const auto r_out_parallel = -std::sqrt(std::abs(1.0 - r_out_perp.length_squared())) * n;
     return r_out_perp + r_out_parallel;
 }
+
+[[nodiscard]] auto random_in_unit_disk() {
+    while (true) {
+        const auto p = vec3{random_double(-1, 1), random_double(-1, 1), 0};
+        if (p.length_squared() >= 1)
+            continue;
+        return p;
+    }
+}
