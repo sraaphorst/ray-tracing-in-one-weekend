@@ -5,8 +5,11 @@
 
 #pragma once
 
+#include <utility>
+
 #include "ray.h"
 #include "hittable.h"
+#include "texture.h"
 
 class material {
 public:
@@ -19,9 +22,10 @@ public:
 
 class lambertian : public material {
 public:
-    const color albedo;
+    std::shared_ptr<texture> albedo;
 
-    explicit lambertian(const color &a): albedo{a} {}
+    explicit lambertian(const color &a) noexcept: albedo{make_shared<solid_color>(a)} {}
+    explicit lambertian(std::shared_ptr<texture> a) noexcept: albedo{std::move(a)} {}
 
     [[nodiscard]] bool scatter(
             const ray &r_in,
@@ -34,8 +38,8 @@ public:
         if (scatter_direction.near_zero())
             scatter_direction = rec.normal;
 
-        scattered = ray{rec.p, scatter_direction};
-        attenuation = albedo;
+        scattered = ray{rec.p, scatter_direction, r_in.time()};
+        attenuation = albedo->value(rec.u, rec.v, rec.p);
         return true;
     }
 };
@@ -53,7 +57,7 @@ public:
             color &attenuation,
             ray &scattered) const noexcept override {
         const auto reflected = reflect(r_in.direction().unit_vector(), rec.normal);
-        scattered = ray{rec.p, reflected + fuzz * random_in_unit_sphere()};
+        scattered = ray{rec.p, reflected + fuzz * random_in_unit_sphere(), r_in.time()};
         attenuation = albedo;
         return scattered.direction().dot(rec.normal) > 0;
     }
@@ -85,7 +89,7 @@ public:
         else
             direction = refract(unit_direction, rec.normal, refraction_ratio);
 
-        scattered = ray{rec.p, direction};
+        scattered = ray{rec.p, direction, r_in.time()};
         return true;
     }
 
