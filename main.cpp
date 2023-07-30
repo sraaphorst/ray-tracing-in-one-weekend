@@ -88,24 +88,66 @@
     return hittable_list(make_shared<bvh_node>(world, 0.0, 1.0));
 }
 
+hittable_list two_spheres() {
+    hittable_list objects;
+
+    const auto checker = make_shared<checker_texture>(
+            color{0.2, 0.3, 0.1},
+            color(0.9, 0.9, 0.9)
+    );
+
+    objects.add(make_shared<sphere>(point3{0, -10, 0}, 10, make_shared<lambertian>(checker)));
+    objects.add(make_shared<sphere>(point3{0,  10, 0}, 10, make_shared<lambertian>(checker)));
+
+    return hittable_list(make_shared<bvh_node>(objects, 0.0, 0.0));
+//    return objects;
+}
+
 int main() {
     std::mutex mtx;
 
     const auto aspect_ratio = 16.0 / 9.0;
-    const auto image_width = 1000;
+//    const auto image_width = 1000;
+    const auto image_width = 400;
     const auto image_height = static_cast<int>(image_width / aspect_ratio);
     const auto samples_per_pixel = 500;
     const auto max_depth = 50;
 
-    const auto world = random_scene();
+//    const auto world = random_scene();
 
-    const point3 lookfrom{13, 2, 3};
-    const point3 lookat{0, 0, 0};
+//    const point3 lookfrom{13, 2, 3};
+//    const point3 lookat{0, 0, 0};
+//    const auto aperture = 0.1;
+
+    // World
+    hittable_list world;
+    point3 lookfrom;
+    point3 lookat;
+    auto vfov = 40.0;
+    auto aperture = 0.0;
+
+    switch (0) {
+        case 1:
+            world = random_scene();
+            lookfrom = point3{13, 2, 3};
+            lookat = point3{0, 0, 0};
+            vfov = 20.0;
+            aperture = 0.1;
+            break;
+
+        default:
+        case 2:
+            world = two_spheres();
+            lookfrom = point3{13, 2, 3};
+            lookat = point3{0, 0, 0};
+            vfov = 20.0;
+            break;
+    }
+
+    // Camera
     const vec3 vup{0, 1, 0};
     const auto dist_to_focus = 10.0;
-    const auto aperture = 0.1;
-
-    camera cam(lookfrom, lookat, vup, 20,
+    camera cam(lookfrom, lookat, vup, vfov,
                aspect_ratio, aperture, dist_to_focus,
                0.0, 1.0);
 

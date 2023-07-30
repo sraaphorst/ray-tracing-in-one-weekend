@@ -35,14 +35,14 @@ public:
 
     checker_texture() noexcept = default;
 
-    checker_texture(color even_color, color odd_color) noexcept
-    : checker_texture(make_shared<solid_color>(even_color), make_shared<solid_color>(odd_color)) {}
-
     checker_texture(std::shared_ptr<texture> even, std::shared_ptr<texture> odd) noexcept
     : even{std::move(even)}, odd{std::move(odd)} {}
 
+    checker_texture(color even_color, color odd_color) noexcept
+            : checker_texture(make_shared<solid_color>(even_color), make_shared<solid_color>(odd_color)) {}
+
     [[nodiscard]] color value(double u, double v, const point3 &p) const noexcept override {
-        auto sines = std::sin(10 * p.x()) * std::sin(10 * p.y() + std::sin(10 * p.z()));
+        const auto sines = std::sin(10 * p.x()) * std::sin(10 * p.y()) * std::sin(10 * p.z());
         return sines < 0 ? odd->value(u, v, p) : even->value(u, v, p);
     }
 };
