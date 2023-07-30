@@ -91,56 +91,58 @@
 hittable_list two_spheres() {
     hittable_list objects;
 
-    const auto checker = make_shared<checker_texture>(
+    const auto texture = make_shared<checker_texture>(
             color{0.2, 0.3, 0.1},
             color(0.9, 0.9, 0.9)
     );
+    const auto material = make_shared<lambertian>(texture);
+    objects.add(make_shared<sphere>(point3{0, -10, 0}, 10, material));
+    objects.add(make_shared<sphere>(point3{0,  10, 0}, 10, material));
 
-    objects.add(make_shared<sphere>(point3{0, -10, 0}, 10, make_shared<lambertian>(checker)));
-    objects.add(make_shared<sphere>(point3{0,  10, 0}, 10, make_shared<lambertian>(checker)));
+    return hittable_list(make_shared<bvh_node>(objects));
+}
 
-    return hittable_list(make_shared<bvh_node>(objects, 0.0, 0.0));
-//    return objects;
+hittable_list two_perlin_spheres() {
+    hittable_list objects;
+
+    const auto texture = make_shared<noise_texture>(4);
+    const auto material = make_shared<lambertian>(texture);
+    objects.add(make_shared<sphere>(point3{0, -1000, 0}, 1000, material));
+    objects.add(make_shared<sphere>(point3{0, 2, 0}, 2, material));
+
+    return hittable_list(make_shared<bvh_node>(objects));
 }
 
 int main() {
     std::mutex mtx;
 
     const auto aspect_ratio = 16.0 / 9.0;
-//    const auto image_width = 1000;
-    const auto image_width = 400;
+    const auto image_width = 1000;
+//    const auto image_width = 400;
     const auto image_height = static_cast<int>(image_width / aspect_ratio);
     const auto samples_per_pixel = 500;
     const auto max_depth = 50;
 
-//    const auto world = random_scene();
-
-//    const point3 lookfrom{13, 2, 3};
-//    const point3 lookat{0, 0, 0};
-//    const auto aperture = 0.1;
-
     // World
     hittable_list world;
-    point3 lookfrom;
-    point3 lookat;
-    auto vfov = 40.0;
+    point3 lookfrom{12, 2, 3};
+    point3 lookat{0, 0, 0};
+    auto vfov = 20.0; // 40.0
     auto aperture = 0.0;
 
     switch (0) {
         case 1:
             world = random_scene();
-            lookfrom = point3{13, 2, 3};
-            lookat = point3{0, 0, 0};
-            vfov = 20.0;
             aperture = 0.1;
             break;
 
-        default:
         case 2:
             world = two_spheres();
-            lookfrom = point3{13, 2, 3};
-            lookat = point3{0, 0, 0};
-            vfov = 20.0;
+            break;
+
+        default:
+        case 3:
+            world = two_perlin_spheres();
             break;
     }
 

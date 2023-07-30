@@ -45,6 +45,9 @@ public:
 
     bvh_node() noexcept = default;
 
+    explicit bvh_node(const hittable_list &list) noexcept
+    : bvh_node(list, 0.0, 0.0) {}
+
     bvh_node(const hittable_list &list, double time0, double time1) noexcept
     : bvh_node(list.objects, 0, list.objects.size(), time0, time1) {}
 
