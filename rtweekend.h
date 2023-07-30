@@ -35,6 +35,10 @@ namespace global_rng {
     return global_rng::distribution(global_rng::generator);
 }
 
+[[nodiscard]] inline auto random_float() noexcept {
+    return static_cast<float>(random_double());
+}
+
 [[nodiscard]] inline auto random_double(double min, double max) {
     return min + (max - min) * random_double();
 }

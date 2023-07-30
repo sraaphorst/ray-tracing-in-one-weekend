@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "perlin.h"
 #include "vec3.h"
 
 class texture {
@@ -44,5 +45,17 @@ public:
     [[nodiscard]] color value(double u, double v, const point3 &p) const noexcept override {
         const auto sines = std::sin(10 * p.x()) * std::sin(10 * p.y()) * std::sin(10 * p.z());
         return sines < 0 ? odd->value(u, v, p) : even->value(u, v, p);
+    }
+};
+
+class noise_texture final : public texture {
+public:
+    perlin noise;
+    const double scale;
+
+    explicit noise_texture(double scale) noexcept: scale{scale} {}
+
+    [[nodiscard]] color value(double u, double v, const point3 &p) const noexcept override {
+        return WHITE * noise.noise(scale * p);
     }
 };
