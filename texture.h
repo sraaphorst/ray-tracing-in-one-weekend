@@ -56,6 +56,8 @@ public:
     explicit noise_texture(double scale) noexcept: scale{scale} {}
 
     [[nodiscard]] color value(double u, double v, const point3 &p) const noexcept override {
-        return WHITE * noise.noise(scale * p);
+//        return GREY * (1.0 + noise.noise(scale * p));
+//        return WHITE * noise.turb(scale * p);
+        return GREY * (1 + std::sin(scale * p.z() + 10 * noise.turb(p)));
     }
 };

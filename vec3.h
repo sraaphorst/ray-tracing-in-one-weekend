@@ -108,6 +108,7 @@ using color = vec3;
 const color BLACK{0, 0, 0};
 const color WHITE{1, 1, 1};
 const color SKY_BLUE{0.5, 0.7, 1.0};
+const color GREY{0.5, 0.5, 0.5};
 
 // Utility functions
 inline auto &operator<<(std::ostream &out, const vec3 &v) {
