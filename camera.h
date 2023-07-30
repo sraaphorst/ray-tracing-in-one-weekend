@@ -20,6 +20,8 @@ private:
     vec3 vertical;
     vec3 u, v, w;
     double lens_radius;
+    double time0;
+    double time1;
 
 public:
     camera(point3 lookfrom,
@@ -28,7 +30,9 @@ public:
            double vertical_fov,
            double aspect_ratio,
            double aperture,
-           double focus_dist) {
+           double focus_dist,
+           double time0 = 0.0,
+           double time1 = 0.0) : time0{time0}, time1{time1} {
         const auto theta = degrees_to_radians(vertical_fov);
         const auto h = std::tan(theta / 2);
         const auto viewport_height = 2.0 * h;
@@ -50,7 +54,8 @@ public:
         const auto rd = lens_radius * random_in_unit_disk();
         const auto offset = u * rd.x() + v * rd.y();
         return {origin + offset,
-                lower_left_corner + s * horizontal + t * vertical - origin - offset};
+                lower_left_corner + s * horizontal + t * vertical - origin - offset,
+                random_double(time0, time1)};
     }
 };
 

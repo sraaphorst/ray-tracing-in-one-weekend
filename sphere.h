@@ -12,6 +12,15 @@
 #include <utility>
 
 class sphere final : public hittable {
+private:
+    static void get_sphere_uv(const point3 &p, double &u, double &v) {
+        const auto theta = std::acos(-p.y());
+        const auto phi = std::atan2(-p.z(), p.x()) + pi;
+
+        u = phi / (2 * pi);
+        v = theta / pi;
+    }
+
 public:
     const point3 center;
     const double radius;
@@ -33,7 +42,7 @@ public:
         const auto discriminant = half_b * half_b - a * c;
         if (discriminant < 0)
             return false;
-        const auto sqrtd = sqrt(discriminant);
+        const auto sqrtd = std::sqrt(discriminant);
 
         // Find the nearest root that lies in the acceptable range.
         auto root = (-half_b - sqrtd) / a;
@@ -47,8 +56,18 @@ public:
         rec.p = r.at(rec.t);
         const auto outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
+        get_sphere_uv(outward_normal, rec.u, rec.v);
         rec.mat_ptr = mat_ptr;
 
+        return true;
+    }
+
+    [[nodiscard]] bool bounding_box(double time0, double time1, aabb &output_box) const noexcept override {
+        const auto v = vec3{radius, radius, radius};
+        output_box = aabb{
+            center - v,
+            center + v
+        };
         return true;
     }
 };

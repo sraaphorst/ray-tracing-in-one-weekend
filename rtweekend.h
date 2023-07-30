@@ -38,3 +38,7 @@ namespace global_rng {
 [[nodiscard]] inline auto random_double(double min, double max) {
     return min + (max - min) * random_double();
 }
+
+[[nodiscard]] inline auto random_int(int min, int max) {
+    return static_cast<int>(random_double(min, max + 1));
+}
