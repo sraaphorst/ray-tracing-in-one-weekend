@@ -10,6 +10,18 @@
 #include <memory>
 #include <random>
 
+// stb_image processing
+#ifdef _MSC_VER
+#pragma warning (push, 0)
+#endif
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#ifdef _MSC_VER
+#pragma warning (pop)
+#endif
+
 using std::shared_ptr;
 using std::make_shared;
 using std::sqrt;
@@ -33,10 +45,6 @@ namespace global_rng {
 
 [[nodiscard]] inline auto random_double() noexcept {
     return global_rng::distribution(global_rng::generator);
-}
-
-[[nodiscard]] inline auto random_float() noexcept {
-    return static_cast<float>(random_double());
 }
 
 [[nodiscard]] inline auto random_double(double min, double max) {

@@ -45,9 +45,6 @@
     const auto ground_material = make_shared<lambertian>(checker);
     world.add(make_shared<sphere>(point3{0, -1000, 0}, 1000, ground_material));
 
-//    const auto ground_material = make_shared<lambertian>(color{0.5, 0.5, 0.5});
-//    world.add(make_shared<sphere>(point3{0, -1000, 0}, 1000, ground_material));
-
     for (auto a = -11; a < 11; ++a) {
         for (auto b = -11; b < 11; ++b) {
             const point3 center{a + 0.9 * random_double(), 0.2, b + 0.9 * random_double()};
@@ -113,6 +110,13 @@ hittable_list two_perlin_spheres() {
     return hittable_list(make_shared<bvh_node>(objects));
 }
 
+hittable_list earth() {
+    const auto earth_texture = make_shared<image_texture>("earthmap.jpg");
+    const auto earth_material = make_shared<lambertian>(earth_texture);
+    const auto globe = make_shared<sphere>(point3{0, 0, 0}, 2, earth_material);
+    return hittable_list{globe};
+}
+
 int main() {
     std::mutex mtx;
 
@@ -125,7 +129,7 @@ int main() {
 
     // World
     hittable_list world;
-    point3 lookfrom{12, 2, 3};
+    point3 lookfrom{13, 2, 3};
     point3 lookat{0, 0, 0};
     auto vfov = 20.0; // 40.0
     auto aperture = 0.0;
@@ -140,10 +144,15 @@ int main() {
             world = two_spheres();
             break;
 
-        default:
         case 3:
             world = two_perlin_spheres();
             break;
+
+        default:
+        case 4:
+            world = earth();
+            break;
+
     }
 
     // Camera
