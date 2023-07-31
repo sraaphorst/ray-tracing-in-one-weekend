@@ -11,28 +11,34 @@
 #include "moving_sphere.h"
 #include "sphere.h"
 #include "material.h"
+#include "aarect.h"
 
 #include <omp.h>
 #include <iostream>
 #include <mutex>
 
-[[nodiscard]] auto ray_color(const ray &r, const hittable &world, int depth) noexcept {
+[[nodiscard]] color ray_color(const ray &r,
+                              const color &background,
+                              const hittable &world,
+                              int depth) noexcept {
+    hit_record rec;
+
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return BLACK;
 
-    hit_record rec;
-    if (world.hit(r, 1e-3, infinity, rec)) {
-        ray scattered;
-        color attenuation;
-        if (rec.mat_ptr->scatter(r, rec, attenuation, scattered))
-            return attenuation * ray_color(scattered, world, depth - 1);
-        return BLACK;
-    }
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, 1e-3, infinity, rec))
+        return background;
 
-    const auto unit_direction = r.direction().unit_vector();
-    const auto t = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0 - t) * WHITE + t * SKY_BLUE;
+    ray scattered;
+    color attenuation;
+    color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+
+    if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+        return emitted;
+
+    return emitted + attenuation * ray_color(scattered, background, world, depth - 1);
 }
 
 [[nodiscard]] auto random_scene() noexcept {
@@ -117,14 +123,46 @@ hittable_list earth() {
     return hittable_list{globe};
 }
 
+hittable_list simple_light() {
+    hittable_list objects;
+
+    const auto texture = make_shared<noise_texture>(4);
+    const auto material = make_shared<lambertian>(texture);
+    objects.add(make_shared<sphere>(point3{0, -1000, 0}, 1000, material));
+    objects.add(make_shared<sphere>(point3{0, 2, 0}, 2, material));
+
+    const auto difflight = make_shared<diffuse_light>(color{4, 4, 4});
+    objects.add(make_shared<xy_rect>(3, 5, 1, 3, -2, difflight));
+    objects.add(make_shared<sphere>(point3{0, 7, 0}, 2, difflight));
+
+    return hittable_list(make_shared<bvh_node>(objects));
+}
+
+hittable_list cornell_box() {
+    hittable_list objects;
+
+    const auto red   = make_shared<lambertian>(color{.65, .05, .05});
+    const auto white = make_shared<lambertian>(color{.73, .73, .73});
+    const auto green = make_shared<lambertian>(color{.12, .45, .15});
+    const auto light = make_shared<diffuse_light>(color{15, 15, 15});
+
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<xz_rect>(213, 343, 227, 332, 554, light));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+    return hittable_list(make_shared<bvh_node>(objects));
+}
+
 int main() {
     std::mutex mtx;
 
-    const auto aspect_ratio = 16.0 / 9.0;
-    const auto image_width = 1000;
+    auto aspect_ratio = 16.0 / 9.0;
+    auto image_width = 1000;
 //    const auto image_width = 400;
-    const auto image_height = static_cast<int>(image_width / aspect_ratio);
-    const auto samples_per_pixel = 500;
+    auto samples_per_pixel = 500;
     const auto max_depth = 50;
 
     // World
@@ -133,6 +171,7 @@ int main() {
     point3 lookat{0, 0, 0};
     auto vfov = 20.0; // 40.0
     auto aperture = 0.0;
+    color background{0.70, 0.80, 1.00}; // BLACK
 
     switch (0) {
         case 1:
@@ -148,12 +187,32 @@ int main() {
             world = two_perlin_spheres();
             break;
 
-        default:
         case 4:
             world = earth();
             break;
 
+        case 5:
+            world = simple_light();
+            samples_per_pixel = 400;
+            background = BLACK;
+            lookfrom = point3{26, 3, 6};
+            lookat = point3{0, 2, 0};
+            break;
+
+        default:
+        case 6:
+            world = cornell_box();
+            aspect_ratio = 1.0;
+            image_width = 600;
+            samples_per_pixel = 200;
+            background = BLACK;
+            lookfrom = point3{278, 278, -800};
+            lookat = point3{278, 278, 0};
+            vfov = 40.0;
+            break;
     }
+
+    const auto image_height = static_cast<int>(image_width / aspect_ratio);
 
     // Camera
     const vec3 vup{0, 1, 0};
@@ -167,14 +226,14 @@ int main() {
     for (auto j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         std::vector<color> line(image_width);
-        #pragma omp parallel for schedule(dynamic) default(none) shared(mtx, std::cout, j, world, cam, image_width, image_height, max_depth, samples_per_pixel, line)
+        #pragma omp parallel for schedule(dynamic) default(none) shared(background, mtx, std::cout, j, world, cam, image_width, image_height, max_depth, samples_per_pixel, line)
         for (auto i = 0; i < image_width; ++i) {
             color pixel_color{0, 0, 0};
             for (int s = 0; s < samples_per_pixel; ++s) {
                 const auto u = (i + random_double()) / (image_width - 1);
                 const auto v = (j + random_double()) / (image_height - 1);
                 const auto r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world, max_depth);
+                pixel_color += ray_color(r, background, world, max_depth);
             }
             {
                 std::lock_guard<std::mutex> lock(mtx);
