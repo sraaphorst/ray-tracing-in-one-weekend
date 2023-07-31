@@ -18,6 +18,10 @@ public:
             const hit_record &rec,
             color &attenuation,
             ray &scattered) const noexcept = 0;
+
+    [[nodiscard]] virtual color emitted(double u, double v, point3 &p) const noexcept {
+        return BLACK;
+    }
 };
 
 class lambertian : public material {
@@ -99,5 +103,25 @@ private:
         const auto r0 = (1 - ref_idx) / (1 + ref_idx);
         const auto r0_2 = r0 * r0;
         return r0_2 + (1 - r0_2) * std::pow(1 - cosine, 5);
+    }
+};
+
+class diffuse_light final : public material {
+public:
+    shared_ptr<texture> emit;
+
+    explicit diffuse_light(shared_ptr<texture> emit) noexcept: emit{std::move(emit)} {}
+    explicit diffuse_light(color c) noexcept: emit(make_shared<solid_color>(c)) {}
+
+    [[nodiscard]] bool scatter(
+            const ray &r_in,
+            const hit_record &rec,
+            color &attenuation,
+            ray &scattered) const noexcept override {
+        return false;
+    }
+
+    [[nodiscard]] color emitted(double u, double v, point3 &p) const noexcept override {
+        return emit->value(u, v, p);
     }
 };
